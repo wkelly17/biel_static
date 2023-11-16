@@ -14,11 +14,11 @@ jobs:
       run:
         working-directory: ./site # Set the default working directory to "site"
     steps:
-      - name: Debug GitHub Actor
-        run: |
-          echo "GitHub Actor: ${{ github.actor }}"
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Debug GitHub Actor
+        run: |
+          echo "GitHub triggering_actor: ${{ github.triggering_actor }}"
       - name: setup node
         # ADD YOUR CUSTOM DEPENDENCY UPGRADE COMMANDS BELOW
         uses: actions/setup-node@v3
