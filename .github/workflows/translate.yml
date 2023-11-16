@@ -2,6 +2,9 @@ name: Translate
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "translate/**"
 
 jobs:
   run-my-action:
@@ -18,8 +21,10 @@ jobs:
 
       - name: Install dependencies and build
         run: |
-          cd translate
-          npm install
+          cd translate &&
+          npm ci &&
           npm run build
 
       - uses: ./translate
+        with:
+          name: "Will"
