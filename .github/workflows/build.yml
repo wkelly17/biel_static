@@ -16,6 +16,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        # todo: skip build if triggering actor is translate-bot
       - name: Debug GitHub Actor
         run: |
           echo "GitHub triggering_actor: ${{ github.triggering_actor }}"

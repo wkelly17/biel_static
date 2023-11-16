@@ -11,8 +11,8 @@ import {visit} from "unist-util-visit";
 import * as deepl from "deepl-node";
 import {createHash} from "crypto";
 import path from "node:path";
-import {findRowById, writeRow} from "./cache";
-import {isDeepLSupported, type localeType} from "./utils";
+import {findRowById, writeRow} from "./cache/index.js";
+import {isDeepLSupported, type localeType} from "./utils.js";
 import "dotenv/config";
 
 async function run() {

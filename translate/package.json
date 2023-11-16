@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "NODE_ENV=DEV tsx watch src/index.ts",
