@@ -5,6 +5,8 @@ const pagesCollection = defineCollection({
   type: "content",
   schema: z.object({
     title: z.string(),
+    sha256: z.string().optional(),
+    draft: z.boolean().optional(),
   }),
 });
 const singletonCollection = defineCollection({
