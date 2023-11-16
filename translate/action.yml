@@ -1,12 +1,11 @@
-name: "My Custom Action"
-description: "Say Hello"
+name: "Wattr"
+description: "Translate the Biel Site"
 author: "Wk"
 
 runs:
   using: "node20"
   main: "dist/index.js"
 inputs:
-  name:
-    description: "The name of the person to greet"
+  deepLKey:
+    description: "DeepL Api Key"
     required: false
-    default: "World"
