@@ -25,7 +25,7 @@ const deepLKey = getInput("deepLKey");
 async function run() {
   // if (!deepLKey) return console.log("no api key!");
   const globber = await globCreate(`${rootDir}/site/src/content/**/*.mdx`);
-  const translator = new deepl.Translator(deepLKey);
+  // const translator = new deepl.Translator(deepLKey);
   for await (const file of globber.globGenerator()) {
     console.log(file);
   }
