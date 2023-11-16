@@ -5,16 +5,16 @@ import {getInput} from "@actions/core";
 
 const name = getInput("name");
 
-console.log({name});
-locales.forEach((locale) => {
-  console.log({locale});
-});
-// let rootDir = process.cwd();
-// console.log({rootDir});
-// let text_file_location = rootDir + "/site/README.md";
-
-// let data = fs.readFileSync(text_file_location, {
-//   encoding: "utf-8",
+// console.log({name});
+// locales.forEach((locale) => {
+//   console.log({locale});
 // });
+let rootDir = process.cwd();
+console.log({rootDir});
+let text_file_location = rootDir + "/site/README.md";
 
-// console.log({data});
+let data = fs.readFileSync(text_file_location, {
+  encoding: "utf-8",
+});
+
+console.log({data});
