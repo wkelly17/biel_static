@@ -26,5 +26,7 @@ jobs:
           npm run build
 
       - uses: ./translate
+        env:
+          NODE_ENV: CI
         with:
-          name: "Will"
+          deepLKey: "Will"

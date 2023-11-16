@@ -14,7 +14,11 @@ import {createHash} from "crypto";
 import path from "node:path";
 
 console.log(process.env.NODE_ENV);
-const rootDir = process.cwd();
+const rootDir =
+  process.env.NODE_ENV && process.env.NODE_ENV == "CI"
+    ? process.cwd()
+    : path.resolve("../");
+
 // console.log({rootDir});
 const localesPath = `${rootDir}/site/src/config/locales.json`;
 const englishMdFiles = `${rootDir}/site/src/content/en`;
