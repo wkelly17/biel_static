@@ -1,0 +1,12 @@
+name: "My Custom Action"
+description: "Say Hello"
+author: "Wk"
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
+inputs:
+  name:
+    description: "The name of the person to greet"
+    required: false
+    default: "World"

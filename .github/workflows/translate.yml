@@ -1,0 +1,25 @@
+name: Translate
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-my-action:
+    name: start Translation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies and build
+        run: |
+          cd translate
+          npm install
+          npm run build
+
+      - uses: ./translate
