@@ -7,6 +7,7 @@ const pagesCollection = defineCollection({
     title: z.string(),
     sha256: z.string().optional(),
     draft: z.boolean().optional(),
+    localize: z.boolean().optional(),
   }),
 });
 const singletonCollection = defineCollection({
