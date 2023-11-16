@@ -11,17 +11,21 @@ import {visit} from "unist-util-visit";
 import * as deepl from "deepl-node";
 import {createHash} from "crypto";
 import path from "node:path";
-import {findRowById, writeRow} from "./cache/index.js";
+import {createTranslationCache} from "./cache/index.js";
 import {isDeepLSupported, type localeType} from "./utils.js";
 import "dotenv/config";
+// todo: amend cache/index to take a db in as a param to run against.  Path is wrong in gh action
+
+console.log(process.env.NODE_ENV);
+const rootDir =
+  process.env.NODE_ENV && process.env.NODE_ENV == "CI"
+    ? process.cwd()
+    : path.resolve("../");
+const translationCache = createTranslationCache(
+  `${rootDir}/translate/cache.sqlite3`
+);
 
 async function run() {
-  console.log(process.env.NODE_ENV);
-  const rootDir =
-    process.env.NODE_ENV && process.env.NODE_ENV == "CI"
-      ? process.cwd()
-      : path.resolve("../");
-
   const localesPath = `${rootDir}/site/src/config/locales.json`;
   const englishMdFiles = `${rootDir}/site/src/content/en`;
   const localesString = await fs.readFile(localesPath, {
@@ -42,7 +46,8 @@ async function run() {
   // console.log({foundRow});
 
   // if (!deepLKey) return console.log("no api key!");
-  const globber = await globCreate(`${rootDir}/site/src/content/**/*.mdx`);
+  const globber = await globCreate(`${rootDir}/site/src/content/**/en/*.mdx`);
+
   const translator = new deepl.Translator(deepLKey);
   await handleMdx(globber, translator, localesJson);
 }
@@ -60,9 +65,7 @@ async function handleMdx(
     });
     // No need to translate if opting out
     if (file.data?.localize === false) continue;
-    // todo: reeanbled
-    // const needsUpdating = await manageFileSha(file, englishFile);
-    // console.log(`${englishFile} needs updating = ${needsUpdating}`);
+    const needsUpdating = await manageFileSha(file, englishFile);
     // if (!needsUpdating) {
     //   continue;
     // }
@@ -97,8 +100,7 @@ async function handleMdx(
         const cacheSha = await getSha256(
           `${yamlContent.title}-${coercedLocaleCode}`
         );
-        const cachedRow = findRowById(cacheSha);
-        console.log({cachedRow});
+        const cachedRow = translationCache.findRowById(cacheSha);
         if (
           !cachedRow ||
           (typeof cachedRow === "object" && !("content" in cachedRow))
@@ -111,7 +113,7 @@ async function handleMdx(
             );
             if (!Array.isArray(translatedTitle)) {
               yamlContent.title = translatedTitle.text;
-              writeRow({
+              translationCache.writeRow({
                 id: cacheSha,
                 content: translatedTitle.text,
                 lastUsed: new Date().toISOString(),
@@ -120,9 +122,12 @@ async function handleMdx(
           } catch (e) {
             console.error(e);
           }
+        } else {
+          yamlContent.title = cachedRow.content;
         }
       }
       // Manage the body:
+
       const tree = fromMarkdown(file.content, {
         extensions: [mdxjs()],
         mdastExtensions: [mdxFromMarkdown()],
@@ -133,52 +138,67 @@ async function handleMdx(
       // Step 1: Push all text nodes to an array and populate the translation map
       const textNodes: any[] = [];
       const promises: Array<Promise<any>> = [];
-      if (!englishFile.includes("home")) continue;
 
-      visit(tree, "text", (node) => {
-        const promise = getSha256(`${node.value}-${coercedLocaleCode}`).then(
-          (shaLangCode) => {
-            console.log({shaLangCode});
-            if (shaLangCode) {
-              textNodes.push({node, shaLangCode});
-              translationMap.set(shaLangCode, {node, translation: null});
+      visit(tree, "text", (node, index, parent) => {
+        if (
+          parent &&
+          // @ts-ignore
+          parent.attributes?.some((attr) => attr.name == "data-no-translate")
+        ) {
+          // noop
+          // console.log(parent);
+          // console.log("do not translate this value");
+        } else {
+          const promise = getSha256(`${node.value}-${coercedLocaleCode}`).then(
+            (shaLangCode) => {
+              if (shaLangCode) {
+                textNodes.push({node, shaLangCode});
+                translationMap.set(shaLangCode, {node, translation: null});
+              }
             }
-          }
-        );
-        promises.push(promise);
+          );
+          promises.push(promise);
+        }
       });
 
       // Wait for all promises to resolve before continuing
       await Promise.all(promises);
 
-      console.log({textNodes});
       // Step 2: Filter the array by checking for the presence of SHA256-langCode in the cache
-      const nodesToTranslate = textNodes.filter(({shaLangCode}) => {
-        const matchingRow = findRowById(shaLangCode);
-        console.log({matchingRow});
+      const nodesToTranslate = textNodes.filter((node) => {
+        const {shaLangCode} = node;
+        const matchingRow = translationCache.findRowById(shaLangCode);
+
+        if (matchingRow) {
+          node.node.value = matchingRow.content;
+          // console.log("x");
+        }
         return matchingRow ? false : true;
       });
       // console.log({debug: nodesToTranslate[0].node});
       const onlyTextNodes = nodesToTranslate.map((node) => node.node.value);
-      console.log({onlyTextNodes});
+      if (!onlyTextNodes.length) {
+        console.log(`no new nodes to translate for ${fileOutPath}`);
+      }
       // Step 3: Run DeepL translate on the batch
+
       let translations: deepl.TextResult[] | null = null;
-      try {
-        translations = await translator.translateText(
-          onlyTextNodes,
-          "en",
-          coercedLocaleCode
-        );
-      } catch (error) {
-        console.error(error);
+      if (onlyTextNodes.length) {
+        try {
+          translations = await translator.translateText(
+            onlyTextNodes,
+            "en",
+            coercedLocaleCode
+          );
+        } catch (error) {
+          console.error(error);
+        }
       }
       if (translations) {
         // Step 4: Update the translation map with the translations
         translations.forEach((result, index) => {
           const {shaLangCode} = nodesToTranslate[index];
           const {node} = translationMap.get(shaLangCode);
-          console.log({tmNode: node});
-          console.log({result});
           translationMap.set(shaLangCode, {node, translation: result.text});
         });
       }
@@ -189,7 +209,7 @@ async function handleMdx(
           console.log({key, value});
           // Update the original text node with the translation
           value.node.value = value.translation;
-          writeRow({
+          translationCache.writeRow({
             id: key,
             content: value.translation,
             lastUsed: new Date().toISOString(),
@@ -199,10 +219,7 @@ async function handleMdx(
       const out = toMarkdown(tree, {extensions: [mdxToMarkdown()]});
       const finishedTranslation = matter.stringify({content: out}, yamlContent);
       await fs.writeFile(fileOutPath, finishedTranslation);
-      // todo afternon: test if changing one line
-      // some guardrails for if not texts to send to deepL
       // Json version for header
-      // ? see if I can Map A links using props with Astro actually for that processing on build time
     }
   }
 }
@@ -216,12 +233,15 @@ async function manageFileSha(
   const currentSha256 = createHash("sha256")
     .update(file.content, "utf-8")
     .digest("hex");
+  console.log(`current Sha for ${filePath} is ${file.data.sha256}`);
+  console.log(`new Sha for ${filePath} is ${currentSha256}`);
   if (file.data?.sha256 == currentSha256) {
     console.log(
-      `checksum for ${filePath} not changed since last build: continue`
+      `checksum for ${filePath} not changed since last build: continue \n\n`
     );
     return needsUpdating;
   } else {
+    console.log(`writing out new checksum for ${filePath}\n\n`);
     file.data.sha256 = currentSha256;
     const withChecksum = matter.stringify({content: file.content}, file.data);
     needsUpdating = true;

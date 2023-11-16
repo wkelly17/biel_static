@@ -1,0 +1,28 @@
+---
+interface Props {
+	href: string;
+}
+
+// todo: preprocess based on lang slug
+const { href} = Astro.props;
+const {slug} = Astro.params || "/"; 
+let hrefToUse = href; 
+if (slug) {
+  const slugParts = slug.split("/");
+  const langPortion = slugParts[0];
+  if (!href.startsWith('http') || !href.startsWith("file") && !href.includes(`/${langPortion}/`)) {
+    // "/pages/whatever":
+    // "pages/whatever":
+    if (href.startsWith('/')) {
+      hrefToUse = `${href[0]}/${langPortion}/${href.slice(1)}`
+    } else {
+      hrefToUse = `/${langPortion}/${href}`
+    }
+  }
+}
+---
+
+	<a href={hrefToUse}>
+    <slot />
+	</a>
+

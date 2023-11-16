@@ -3,6 +3,10 @@ export const prerender = true;
 import { getCollection } from 'astro:content';
 import Layout from "../layouts/Layout.astro"
 import allLocales from "../config/locales.json"
+import Link from "@components/Link.astro"
+import Html from "@components/Link.astro"
+
+
 export async function getStaticPaths() {
   const pages = (await getCollection('pages'))
 
@@ -11,7 +15,18 @@ export async function getStaticPaths() {
     // Built home pages to just their /en /es roots
     let isHomePage = page.id.includes("home.mdx")
     let slug = isHomePage ? page.slug.replace("/home", "") : page.slug
-    const localeCode = page.id.split('/')[0]
+console.log({slug})
+    const pieces = page.id.replace('.mdx', "").split('/');
+    const genericSlug =  isHomePage ? pieces[1].replace("home", "") : pieces[1];
+    console.log({genericSlug})
+    const languageHrefs = allLocales.map(l => {
+      return {
+        link:   `/${l.code}/${genericSlug}`,
+        code: l.code
+      }
+    
+    })
+    const localeCode = pieces[0]
     const thisLocale = allLocales.find(l => l.code === localeCode)!
     console.log({slug})
     return {
@@ -19,18 +34,18 @@ export async function getStaticPaths() {
         slug: slug,
       },
       props: {
-        page, locale: thisLocale, isHomePage
+        page, locale: thisLocale, isHomePage, languageHrefs
       },
     };
   })
 }
-const {page, locale, isHomePage} = Astro.props;
+const {page, locale, isHomePage, languageHrefs} = Astro.props;
 const {Content} = await page.render()
 ---
 
-<Layout title={page.data.title} locale={locale} isHomePage={isHomePage}>
+<Layout title={page.data.title} locale={locale} isHomePage={isHomePage} languageHrefs={languageHrefs}>
   <div class={`${isHomePage ? "" : "interiorPage max-w-95ch mx-auto px-6 py-8"}`}>
-    <Content/>
+    <Content components={{a: Link}}/>
   </div>
 </Layout>
   <!-- An sync promise below -->

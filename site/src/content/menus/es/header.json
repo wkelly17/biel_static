@@ -1,0 +1,13 @@
+{
+  "name": "header",
+  "links": [
+    {
+      "url": "processes",
+      "label": "Procesos"
+    },
+    {
+      "url": "tools",
+      "label": "Herramientas"
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 ---
 import type {Locale} from "../customTypes/types"
+import allLocales from "../config/locales.json"
 interface Props {
 	title: string;
 	locale: Locale
 	isHomePage: boolean
+	languageHrefs: Array<{link:string, code:string}>
 }
 import '@unocss/reset/tailwind-compat.css'
 import "@src/styles/global.css"
@@ -11,7 +13,7 @@ import { getEntry } from 'astro:content';
 import { ViewTransitions } from 'astro:transitions';
 import Header from "../components/Header.svelte"
 
-const { title, locale, isHomePage } = Astro.props;
+const { title, locale, isHomePage,languageHrefs } = Astro.props;
 const entry = `${locale.code}/footer`
 const entryHeader = `${locale.code}/header`
 const footerPost = await getEntry('singletons', entry);
@@ -36,11 +38,25 @@ const headerJson = await getEntry('menus', entryHeader);
 		<title>{title}</title>
 	</head>
 	<body>
-			{headerJson && 	<Header client:load headerJson={headerJson.data} isHomePage={isHomePage} locale={locale}/>}
+		<ul class="flex gap-4 px-2 w-max ml-auto ">
+			{languageHrefs.map(href => {
+
+				return (
+					<li class="">
+						<a  class="decoration-none uppercase" href={href.link}>{href.code}</a>
+					</li>
+				)
+			})}
+					</ul>
+					<div class="relative">
+						{headerJson && 	<Header client:load headerJson={headerJson.data} isHomePage={isHomePage} locale={locale}/>}
+					</div>
 		{!isHomePage && 
 			<h1 class="text-center w-full bg-[#013C8E] text-white">{title}</h1>
 			}
+			
 		<slot />
+		
 		{Footer && 	<Footer/>}
 	</body>
 </html>
