@@ -1,0 +1,36 @@
+---
+export const prerender = true;
+import { getCollection } from 'astro:content';
+import Layout from "../layouts/Layout.astro"
+import allLocales from "../config/locales.json"
+export async function getStaticPaths() {
+  const pages = (await getCollection('pages'))
+
+// todo: https://docs.astro.build/en/guides/content-collections/#organizing-with-subdirectories:~:text=The%20filter%20argument%20also%20supports%20filtering%20by%20nested%20directories%20within%20a%20collection.%20Since%20the%20id%20includes%20the%20full%20nested%20path%2C%20you%20can%20filter%20by%20the%20start%20of%20each%20id%20to%20only%20return%20items%20from%20a%20specific%20nested%20directory%3A
+  return pages.map((page) => {
+    // Built home pages to just their /en /es roots
+    let isHomePage = page.id.includes("home.mdx")
+    let slug = isHomePage ? page.slug.replace("/home", "") : page.slug
+    const localeCode = page.id.split('/')[0]
+    const thisLocale = allLocales.find(l => l.code === localeCode)!
+    console.log({slug})
+    return {
+      params: {
+        slug: slug,
+      },
+      props: {
+        page, locale: thisLocale, isHomePage
+      },
+    };
+  })
+}
+const {page, locale, isHomePage} = Astro.props;
+const {Content} = await page.render()
+---
+
+<Layout title={page.data.title} locale={locale} isHomePage={isHomePage}>
+  <div class={`${isHomePage ? "" : "interiorPage max-w-95ch mx-auto px-6 py-8"}`}>
+    <Content/>
+  </div>
+</Layout>
+  <!-- An sync promise below -->
