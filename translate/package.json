@@ -5,11 +5,13 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "dev": "NODE_ENV=DEV tsx watch ./src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.9.0",
+    "tsx": "^4.1.2",
     "typescript": "^5.2.2"
   },
   "dependencies": {

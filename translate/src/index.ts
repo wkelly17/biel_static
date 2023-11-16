@@ -13,7 +13,9 @@ import * as deepl from "deepl-node";
 import {createHash} from "crypto";
 import path from "node:path";
 
+console.log(process.env.NODE_ENV);
 const rootDir = process.cwd();
+// console.log({rootDir});
 const localesPath = `${rootDir}/site/src/config/locales.json`;
 const englishMdFiles = `${rootDir}/site/src/content/en`;
 const localesString = fs.readFileSync(localesPath, {
@@ -23,6 +25,7 @@ const localesJson = JSON.parse(localesString);
 const deepLKey = getInput("deepLKey");
 
 async function run() {
+  console.log("go");
   // if (!deepLKey) return console.log("no api key!");
   const globber = await globCreate(`${rootDir}/site/src/content/**/*.mdx`);
   // const translator = new deepl.Translator(deepLKey);
