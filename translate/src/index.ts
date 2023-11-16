@@ -1,7 +1,11 @@
 import fs, {writeFileSync} from "node:fs";
 import {readdir, stat} from "fs/promises";
 import locales from "../../site/src/config/locales.json";
+import {getInput} from "@actions/core";
 
+const name = getInput("name");
+
+console.log({name});
 locales.forEach((locale) => {
   console.log({locale});
 });
