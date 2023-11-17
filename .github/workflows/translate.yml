@@ -41,7 +41,7 @@ jobs:
         with:
           # todo: change to key
           deepLKey: ${{ secrets.DEEPLKEY }}
-          prevDiff: ${{steps.save-git-diff.outputs}}
+          prevDiff: ${{steps.save-git-diff.outputs.DIFF}}
 
       - name: setup git config
         run: |
