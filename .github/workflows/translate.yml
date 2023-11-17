@@ -28,13 +28,18 @@ jobs:
           cd translate &&
           npm ci &&
           npm run build
+      # todo: see if I can make this an artificat?
+      - name: Save git diff result
+        id: save-git-diff
+        run: |
+          echo "DIFF=$(git --no-pager diff --unified=0 HEAD^ HEAD)" >> "$GITHUB_ENV"
       - uses: ./translate
         env:
           NODE_ENV: CI
         with:
           # todo: change to key
           deepLKey: ${{ secrets.DEEPLKEY }}
-          prevDiff: echo $(git diff --unified=0 HEAD^ HEAD)
+          prevDiff: ${{env.DIFF}}
 
       - name: setup git config
         run: |

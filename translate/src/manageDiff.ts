@@ -12,7 +12,6 @@ import {visit} from "unist-util-visit";
 // Update it to use "manual translation" column
 //
 export function manageDiff(diff: string, translationsCache: Cache) {
-  console.log(diff);
   const splitByFile = diff.split(/^diff --git /gm);
   const contentChanges = splitByFile.filter((chunk) => {
     return chunk.includes("site/src/content");
