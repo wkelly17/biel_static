@@ -37,13 +37,21 @@ jobs:
         run: |
           git config user.name "Translation Bot"
           git config user.email "<>"
-      - name: check for changes
-        run: git status
-      - name: stage changed files
-        run: git add .
-      - name: commit changed files
-        run: git commit -m "Auto updating text file"
-      - name: fetch from master
-        run: git fetch origin master
-      - name: push code to master
-        run: git push origin HEAD:master
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git status --porcelain > changes.txt
+          if [ -s changes.txt ]; then
+            echo "Changes detected."
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No changes detected."
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Process changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git add .
+          git commit -m "Auto updating text file"
+          git fetch
+          git push
