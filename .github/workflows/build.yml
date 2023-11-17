@@ -1,10 +1,10 @@
 name: Build
 
 on:
-  workflow_run:
-    workflows: [Translate]
-    types:
-      - completed
+  # workflow_run:
+  #   workflows: [Translate]
+  #   types:
+  #     - completed
   workflow_dispatch:
 jobs:
   deploy:
