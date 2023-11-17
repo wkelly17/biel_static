@@ -32,7 +32,6 @@ jobs:
       - name: Save git diff result
         id: save-git-diff
         run: |
-          git diff --unified=0 HEAD^ HEAD > git_diff.txt
           echo "diff=$(git diff --unified=0 HEAD^ HEAD)" >> "$GITHUB_OUTPUT"
       - uses: ./translate
         env:
