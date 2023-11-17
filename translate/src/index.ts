@@ -1,4 +1,5 @@
 import * as fs from "node:fs/promises";
+import {readFileSync} from "node:fs";
 // import locales from "../../site/src/config/locales.json";
 import {getInput} from "@actions/core";
 import {type Globber, create as globCreate} from "@actions/glob";
@@ -14,6 +15,7 @@ import path from "node:path";
 import {createTranslationCache} from "./cache/index.js";
 import {isDeepLSupported, type localeType} from "./utils.js";
 import "dotenv/config";
+import {manageDiff} from "./manageDiff.js";
 // todo: amend cache/index to take a db in as a param to run against.  Path is wrong in gh action
 
 console.log(process.env.NODE_ENV);
@@ -21,31 +23,40 @@ const rootDir =
   process.env.NODE_ENV && process.env.NODE_ENV == "CI"
     ? process.cwd()
     : path.resolve("../");
+const deepLKey =
+  process.env.NODE_ENV && process.env.NODE_ENV == "CI"
+    ? getInput("deepLKey")
+    : (process.env.DEEPLKEY as string);
+
+let diff = null;
+if (process.env.NODE_ENV && process.env.NODE_ENV == "CI") {
+  diff = getInput("prevDiff");
+  console.log("Received CI diff");
+} else {
+  try {
+    diff = readFileSync(`${rootDir}/translate/src/example.diff`, {
+      encoding: "utf-8",
+    });
+  } catch (error) {
+    console.log("generate a diff to work on this functionality");
+    // nooop dev err
+  }
+}
 const translationCache = createTranslationCache(
   `${rootDir}/translate/cache.sqlite3`
 );
+// This will update translations cache if there are things that have changed
+if (diff) {
+  manageDiff(diff, translationCache);
+}
 
 async function run() {
   const localesPath = `${rootDir}/site/src/config/locales.json`;
-  const englishMdFiles = `${rootDir}/site/src/content/en`;
   const localesString = await fs.readFile(localesPath, {
     encoding: "utf-8",
   });
   const localesJson = JSON.parse(localesString) as Array<localeType>;
-  const deepLKey =
-    process.env.NODE_ENV && process.env.NODE_ENV == "CI"
-      ? getInput("deepLKey")
-      : (process.env.DEEPLKEY as string);
 
-  // let row = writeRow({
-  //   id: "exid",
-  //   content: "The tr content",
-  //   lastUsed: new Date().toISOString(),
-  // });
-  // let foundRow = findRowById("exid");
-  // console.log({foundRow});
-
-  // if (!deepLKey) return console.log("no api key!");
   const globber = await globCreate(`${rootDir}/site/src/content/**/en/*.mdx`);
 
   const translator = new deepl.Translator(deepLKey);
@@ -66,9 +77,9 @@ async function handleMdx(
     // No need to translate if opting out
     if (file.data?.localize === false) continue;
     const needsUpdating = await manageFileSha(file, englishFile);
-    // if (!needsUpdating) {
-    //   continue;
-    // }
+    if (!needsUpdating) {
+      continue;
+    }
     console.log(`working on ${englishFile}`);
     for await (const targetLocale of localesJson) {
       if (targetLocale.code == "en") continue; //base lang
@@ -169,13 +180,14 @@ async function handleMdx(
         const {shaLangCode} = node;
         const matchingRow = translationCache.findRowById(shaLangCode);
 
+        // Go ahead and mutate the node we are writing back out
         if (matchingRow) {
-          node.node.value = matchingRow.content;
-          // console.log("x");
+          node.node.value = matchingRow.manual_translation
+            ? matchingRow.manual_translation
+            : matchingRow.content;
         }
         return matchingRow ? false : true;
       });
-      // console.log({debug: nodesToTranslate[0].node});
       const onlyTextNodes = nodesToTranslate.map((node) => node.node.value);
       if (!onlyTextNodes.length) {
         console.log(`no new nodes to translate for ${fileOutPath}`);
@@ -206,7 +218,6 @@ async function handleMdx(
       // Step 5: Reinsert the original nodes and their translations back into the tree
       translationMap.forEach((value, key, map) => {
         if (value.translation !== null) {
-          console.log({key, value});
           // Update the original text node with the translation
           value.node.value = value.translation;
           translationCache.writeRow({
@@ -233,15 +244,12 @@ async function manageFileSha(
   const currentSha256 = createHash("sha256")
     .update(file.content, "utf-8")
     .digest("hex");
-  console.log(`current Sha for ${filePath} is ${file.data.sha256}`);
-  console.log(`new Sha for ${filePath} is ${currentSha256}`);
   if (file.data?.sha256 == currentSha256) {
     console.log(
       `checksum for ${filePath} not changed since last build: continue \n\n`
     );
     return needsUpdating;
   } else {
-    console.log(`writing out new checksum for ${filePath}\n\n`);
     file.data.sha256 = currentSha256;
     const withChecksum = matter.stringify({content: file.content}, file.data);
     needsUpdating = true;
@@ -285,3 +293,19 @@ async function getSha256(str: string) {
 
 //   return files.reduce((all, folderContents) => all.concat(folderContents), []);
 // }
+
+/* 
+
+/* 
+en -> auto (store in cache) -> change manually
+updated en -> check current tree. For each node, is it in the cache? If not it's changed. But how do we align it to the english? 
+
+
+// When a node changes (e.g) PRE to pre, I know that PRE was the auto of FAQ, therefore, I know that pre is now associated with faq.  So, when a change happens, I need to gather all the lies in a content file that were changed. 
+
+
+PREGUNTAS FREQCUENTES -> PRE FR
+PRE -> DELETED
+
+For each Negative that has a corresponding postivie, I want to write them out as prev + next: 
+*/

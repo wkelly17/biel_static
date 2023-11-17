@@ -1,8 +1,15 @@
-import Database from "better-sqlite3";
+import Database, {type RunResult} from "better-sqlite3";
 
-interface Cache {
+export interface Cache {
   findRowById(id: string): any;
+  findByContent(content: string): any;
+  findByManualContent(content: string): any;
   writeRow(params: {id: string; content: string; lastUsed: string}): void;
+  updateManualTranslationCol(params: {
+    rowId: string;
+    manualContent: string;
+    lastUsed: string;
+  }): RunResult;
   deleteRowById(id: string): void;
 }
 
@@ -12,6 +19,34 @@ export const createTranslationCache = (dbPath: string): Cache => {
   const findRowById = (id: string) => {
     const stmt = db.prepare("SELECT * FROM translation WHERE id = ?");
     return stmt.get(id);
+  };
+  const findByContent = (content: string) => {
+    const stmt = db.prepare("SELECT * FROM translation WHERE content = ?");
+    return stmt.get(content);
+  };
+  const findByManualContent = (content: string) => {
+    const stmt = db.prepare(
+      "SELECT * FROM translation WHERE manual_translation = ?"
+    );
+    return stmt.get(content);
+  };
+  const updateManualTranslationCol = ({
+    rowId,
+    manualContent,
+    lastUsed,
+  }: {
+    rowId: string;
+    manualContent: string;
+    lastUsed: string;
+  }) => {
+    const updateQuery = `
+    UPDATE translation
+    SET manual_translation = @manualContent,
+          last_used = @lastUsed
+    WHERE id = @rowId;
+`;
+
+    return db.prepare(updateQuery).run({manualContent, rowId, lastUsed});
   };
 
   const writeRow = ({
@@ -36,6 +71,9 @@ export const createTranslationCache = (dbPath: string): Cache => {
 
   return {
     findRowById,
+    findByContent,
+    findByManualContent,
+    updateManualTranslationCol,
     writeRow,
     deleteRowById,
   };

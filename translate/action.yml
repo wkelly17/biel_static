@@ -9,3 +9,5 @@ inputs:
   deepLKey:
     description: "DeepL Api Key"
     required: false
+  prevDiff:
+    description: "Diff from head and previous commit"

@@ -8,6 +8,7 @@ export const createTable = () => {
             id TEXT PRIMARY KEY,
             content TEXT,
             last_used TEXT
+            manual_translation: TEXT
         );
     `;
   db.exec(createTableQuery);

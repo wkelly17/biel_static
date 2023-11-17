@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "NODE_ENV=DEV tsx watch src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "refreshDiff": "git diff --unified=0 ../ > ./src/example.diff "
   },
   "license": "ISC",
   "devDependencies": {
