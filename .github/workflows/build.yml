@@ -1,7 +1,10 @@
+name: Build
+
 on:
-  push:
-    paths:
-      - "site/**"
+  workflow_run:
+    workflows: [Translate]
+    types:
+      - completed
   workflow_dispatch:
 jobs:
   deploy:
@@ -16,10 +19,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        # todo: skip build if triggering actor is translate-bot
-      - name: Debug GitHub Actor
-        run: |
-          echo "GitHub triggering_actor: ${{ github.triggering_actor }}"
       - name: setup node
         # ADD YOUR CUSTOM DEPENDENCY UPGRADE COMMANDS BELOW
         uses: actions/setup-node@v3
