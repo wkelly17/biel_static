@@ -32,7 +32,7 @@ jobs:
       - name: Save git diff result
         id: save-git-diff
         run: |
-          echo 'DIFF="$(git --no-pager diff --unified=0 HEAD^ HEAD)" >> "$GITHUB_ENV"
+          echo 'DIFF="$(git --no-pager diff --unified=0 HEAD^ HEAD)"' >> "$GITHUB_ENV"
       - uses: ./translate
         env:
           NODE_ENV: CI
