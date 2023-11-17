@@ -28,18 +28,13 @@ jobs:
           cd translate &&
           npm ci &&
           npm run build
-
-      - name: Save git diff result
-        id: save-git-diff
-        run: |
-          echo "diff=$(git diff --unified=0 HEAD^ HEAD)" >> "$GITHUB_OUTPUT"
       - uses: ./translate
         env:
           NODE_ENV: CI
         with:
           # todo: change to key
           deepLKey: ${{ secrets.DEEPLKEY }}
-          prevDiff: ${{steps.save-git-diff.outputs.diff}}
+          prevDiff: $(git diff --unified=0 HEAD^ HEAD)
 
       - name: setup git config
         run: |

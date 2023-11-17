@@ -32,6 +32,7 @@ let diff = null;
 if (process.env.NODE_ENV && process.env.NODE_ENV == "CI") {
   diff = getInput("prevDiff");
   console.log("Received CI diff");
+  console.log(diff);
 } else {
   try {
     diff = readFileSync(`${rootDir}/translate/src/example.diff`, {
