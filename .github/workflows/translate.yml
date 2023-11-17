@@ -50,13 +50,10 @@ jobs:
       - name: Check for changes
         id: check_changes
         run: |
-          git status --porcelain > changes.txt
-          if [ -s changes.txt ]; then
-            echo "Changes detected."
-            echo "changes=true" >> "$GITHUB_OUTPUT"
+          if [[ `git status --porcelain` ]]; then
+          echo "changes=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No changes detected."
-            echo "changes=false" >> "$GITHUB_OUTPUT"
+          echo "changes=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Process changes
         if: steps.check_changes.outputs.changes == 'true'
