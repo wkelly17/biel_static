@@ -34,7 +34,7 @@ jobs:
         with:
           # todo: change to key
           deepLKey: ${{ secrets.DEEPLKEY }}
-          prevDiff: $(git diff --unified=0 HEAD^ HEAD)
+          prevDiff: echo $(git diff --unified=0 HEAD^ HEAD)
 
       - name: setup git config
         run: |
