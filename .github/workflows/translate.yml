@@ -32,14 +32,16 @@ jobs:
       - name: Save git diff result
         id: save-git-diff
         run: |
-          echo 'DIFF="$(git --no-pager diff --unified=0 HEAD^ HEAD)"' >> "$GITHUB_ENV"
+          echo 'DIFF<<EOF' >> $GITHUB_OUTPUT
+          git --no-pager diff --unified=0 HEAD^ HEAD >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
       - uses: ./translate
         env:
           NODE_ENV: CI
         with:
           # todo: change to key
           deepLKey: ${{ secrets.DEEPLKEY }}
-          prevDiff: ${{env.DIFF}}
+          prevDiff: ${{steps.save-git-diff.outputs}}
 
       - name: setup git config
         run: |
