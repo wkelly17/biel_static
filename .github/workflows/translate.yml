@@ -29,19 +29,21 @@ jobs:
           npm ci &&
           npm run build
       # todo: see if I can make this an artificat?
-      - name: Save git diff result
-        id: save-git-diff
-        run: |
-          echo 'DIFF<<EOF' >> $GITHUB_OUTPUT
-          git --no-pager diff --unified=0 HEAD^ HEAD >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+      # - name: Save git diff result
+      #   id: save-git-diff
+      #   run: |
+      #     echo 'DIFF<<EOF' >> $GITHUB_OUTPUT
+      #     git --no-pager diff --unified=0 HEAD^ HEAD >> $GITHUB_OUTPUT
+      #     echo 'EOF' >> $GITHUB_OUTPUT
       - uses: ./translate
         env:
           NODE_ENV: CI
         with:
           # todo: change to key
           deepLKey: ${{ secrets.DEEPLKEY }}
-          prevDiff: ${{steps.save-git-diff.outputs.DIFF}}
+          # prevDiff: ${{steps.save-git-diff.outputs.DIFF}}
+          prevDiff: |
+            git --no-pager diff --unified=0 HEAD^ HEAD
 
       - name: setup git config
         run: |
