@@ -235,6 +235,44 @@ async function handleMdx(
     }
   }
 }
+// todo: if desired can make this do menus as well
+async function handleMenus(
+  englishJson: Globber,
+  translator: deepl.Translator,
+  localesJson: Array<localeType>
+) {
+  for await (const englishFile of englishJson.globGenerator()) {
+    const fileData = await fs.readFile(englishFile, {
+      encoding: "utf-8",
+    });
+    const fileJson = JSON.parse(fileData) as {
+      links: any[];
+      linksSha256?: string;
+    };
+    const currentSha = fileJson.linksSha256;
+    const calculatedSha = await getSha256(JSON.stringify(fileJson.links));
+    let needsUpdating = calculatedSha !== currentSha;
+    fileJson.linksSha256 = calculatedSha;
+    // write out new sha:
+    await fs.writeFile(englishFile, JSON.stringify(fileJson));
+    if (!needsUpdating) continue;
+    for await (const targetLocale of localesJson) {
+      if (targetLocale.code == "en") continue; //base lang
+      if (!isDeepLSupported.has(targetLocale.code)) {
+        console.log(
+          `${targetLocale.name} code:${targetLocale.code} is not deepL supported`
+        );
+        continue;
+      }
+      const fileOutPath = englishFile.replace("/en/", `/${targetLocale.code}/`);
+      const dir = path.dirname(fileOutPath);
+      await fs.mkdir(dir, {recursive: true});
+      const langCopy = {...fileJson};
+      for await (const link of langCopy.links) {
+      }
+    }
+  }
+}
 run();
 
 async function manageFileSha(

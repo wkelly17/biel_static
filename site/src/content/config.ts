@@ -19,6 +19,7 @@ const singletonCollection = defineCollection({
 
 const menuSchema = z.object({
   name: z.string(),
+  linksSha256: z.string().optional(),
   links: z.array(
     z.object({
       url: z.string(),

@@ -46,11 +46,11 @@ a {
   list-style-position: inside;
   padding-left: 0.5rem;
 }
-.interiorPage h2 {
+.interiorPage div:not(.flex, .md:flex, .lg:flex) h2 {
   margin-top: 2rem;
 }
 
-.interiorPage div + div {
+.interiorPage div:not(.flex, .md:flex, .lg:flex) + div {
   margin: 3rem 0;
   /* outline: solid; */
 }

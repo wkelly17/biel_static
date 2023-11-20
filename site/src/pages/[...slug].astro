@@ -4,8 +4,7 @@ import { getCollection } from 'astro:content';
 import Layout from "../layouts/Layout.astro"
 import allLocales from "../config/locales.json"
 import Link from "@components/Link.astro"
-import Html from "@components/Link.astro"
-
+import {internationalizeInternalLinks} from "@lib/i18nLinks"
 
 export async function getStaticPaths() {
   const pages = (await getCollection('pages'))
@@ -29,6 +28,8 @@ console.log({slug})
     const localeCode = pieces[0]
     const thisLocale = allLocales.find(l => l.code === localeCode)!
     console.log({slug})
+    // ! Muates page.body on build to make sure internals are prefixed properly for locales
+    internationalizeInternalLinks(page, thisLocale.code)
     return {
       params: {
         slug: slug,
@@ -44,8 +45,8 @@ const {Content} = await page.render()
 ---
 
 <Layout title={page.data.title} locale={locale} isHomePage={isHomePage} languageHrefs={languageHrefs}>
-  <div class={`${isHomePage ? "" : "interiorPage max-w-95ch mx-auto px-6 py-8"}`}>
-    <Content components={{a: Link}}/>
+  <div class={`${isHomePage ? "" : "interiorPage max-w-105ch mx-auto px-6 py-8"}`}>
+    <Content />
   </div>
 </Layout>
   <!-- An sync promise below -->
