@@ -30,7 +30,11 @@ const deepLKey =
 
 let diff = null;
 if (process.env.NODE_ENV && process.env.NODE_ENV == "CI") {
-  diff = getInput("prevDiff");
+  let diffPath = getInput("prevDiffPath");
+  console.log({diffPath});
+  let diff = readFileSync(diffPath, {
+    encoding: "utf-8",
+  });
   console.log("Received CI diff");
   console.log(diff);
 } else {
