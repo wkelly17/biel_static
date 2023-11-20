@@ -1,0 +1,38 @@
+diff --git a/.github/workflows/translate.yml b/.github/workflows/translate.yml
+index dc4bae4..5614f7a 100644
+--- a/.github/workflows/translate.yml
++++ b/.github/workflows/translate.yml
+@@ -32,6 +32,4 @@ jobs:
+-      # - name: Save git diff result
+-      #   id: save-git-diff
+-      #   run: |
+-      #     echo 'DIFF<<EOF' >> $GITHUB_OUTPUT
+-      #     git --no-pager diff --unified=0 HEAD^ HEAD >> $GITHUB_OUTPUT
+-      #     echo 'EOF' >> $GITHUB_OUTPUT
++      - name: Save git diff result
++        id: save-git-diff
++        run: |
++          git --no-pager diff --unified=0 HEAD^ HEAD > $GITHUB_WORKSPACE/diff.txt
+@@ -44,3 +42 @@ jobs:
+-          # prevDiff: ${{steps.save-git-diff.outputs.DIFF}}
+-          prevDiff: |
+-            git --no-pager diff --unified=0 HEAD^ HEAD
++          prevDiffPath: ${{ github.workspace }}/diff.txt
+diff --git a/translate/action.yml b/translate/action.yml
+index 2075799..18e527f 100644
+--- a/translate/action.yml
++++ b/translate/action.yml
+@@ -12 +12 @@ inputs:
+-  prevDiff:
++  prevDiffPath:
+diff --git a/translate/src/index.ts b/translate/src/index.ts
+index d444002..6132781 100644
+--- a/translate/src/index.ts
++++ b/translate/src/index.ts
+@@ -33 +33,5 @@ if (process.env.NODE_ENV && process.env.NODE_ENV == "CI") {
+-  diff = getInput("prevDiff");
++  let diffPath = getInput("prevDiffPath");
++  console.log({diffPath});
++  let diff = readFileSync(diffPath, {
++    encoding: "utf-8",
++  });
