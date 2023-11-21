@@ -40,7 +40,9 @@ jobs:
           # todo: change to key
           deepLKey: ${{ secrets.DEEPLKEY }}
           prevDiffPath: ${{ github.workspace }}/diff.txt
-
+      - name: remove Diff from workspace
+        run: |
+          rm $GITHUB_WORKSPACE/diff.txt
       - name: setup git config
         run: |
           git config user.name "Translation Bot"
